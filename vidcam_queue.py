@@ -29,15 +29,21 @@ class VideoCapture:
         return self.q.get()
 
 
-cap = VideoCapture(0)
-while True:
-    time.sleep(0.5)  # simulate time between events
-    try:
-        frame = cap.read()
-        print(frame.shape)
-        cv2.imshow("frame", frame)
-        if chr(cv2.waitKey(1) & 255) == "q":
+cam = VideoCapture(0)
+try:
+    while True:
+        time.sleep(0.5)  # simulate time between events
+        try:
+            frame = cam.read()
+            print(frame.shape)
+            cv2.imshow("frame", frame)
+            if chr(cv2.waitKey(1) & 255) == "q":
+                break
+        except KeyboardInterrupt:
+            print(f"^c:")
             break
-    except KeyboardInterrupt:
-        print(f"^c:")
-        break
+except Exception as e:
+    print(e)
+finally:
+    cam.cap.release()
+

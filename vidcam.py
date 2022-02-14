@@ -43,24 +43,24 @@ class VideoCapture:
 
 cam1 = VideoCapture(0)
 count = 0
-while True:
-    time.sleep(0.5)  # simulate time between events
-    count += 1
-    try:
-        print(f"count:  {count}")
-        frame = cam1.read()
+try:
+    while True:
+        time.sleep(0.5)  # simulate time between events
+        count += 1
+        try:
+            print(f"count:  {count}")
+            frame = cam1.read()
 
-        print(f"type(frame):  {type(frame)}")
-        if frame is not None and isinstance(frame, np.ndarray):
-            print(frame.shape)
-        # cv2.imshow("frame", frame)
-        # if chr(cv2.waitKey(1) & 255) == "q":
-        #     break
-    except Exception as e:
-        print(e)
+            print(f"type(frame):  {type(frame)}")
+            if frame is not None and isinstance(frame, np.ndarray):
+                print(frame.shape)
+            # cv2.imshow("frame", frame)
+            # if chr(cv2.waitKey(1) & 255) == "q":
+            #     break
+        except KeyboardInterrupt:
+            break #
 
-    except KeyboardInterrupt:
-        print(f"^c:")
-        break
-    finally:
-        cam1.cap.release()
+except Exception as e:
+    print(f"e:  {e}")
+finally:
+    cam1.cap.release()
