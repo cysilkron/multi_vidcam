@@ -43,9 +43,11 @@ class VideoCapture:
 
 cam1 = VideoCapture(0)
 count = 0
+FPS = 25
+fps = 1 / FPS
 try:
     while True:
-        time.sleep(0.5)  # simulate time between events
+        time.sleep(fps)  # simulate time between events
         count += 1
         try:
             print(f"count:  {count}")
