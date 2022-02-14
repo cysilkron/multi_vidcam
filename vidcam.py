@@ -54,9 +54,9 @@ try:
             print(f"type(frame):  {type(frame)}")
             if frame is not None and isinstance(frame, np.ndarray):
                 print(frame.shape)
-            # cv2.imshow("frame", frame)
-            # if chr(cv2.waitKey(1) & 255) == "q":
-            #     break
+                cv2.imshow("frame", frame)
+                if chr(cv2.waitKey(1) & 255) == "q":
+                    break
         except KeyboardInterrupt:
             break #
 
@@ -64,3 +64,4 @@ except Exception as e:
     print(f"e:  {e}")
 finally:
     cam1.cap.release()
+    cv2.destroyAllWindows()
