@@ -15,7 +15,7 @@ import cv2
 # 	frame = imutils.resize(frame, width=450)
 # 	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 # 	frame = np.dstack([frame, frame, frame])
-# 	return frame
+# 	return fram
 
 
 RESET_DIR = True
@@ -33,7 +33,8 @@ def save_frame(save_dir, filename, frame):
 
 def main(args):
     src, save_dir = args['src'], args['save_dir']
-    init_save_dir(save_dir)
+    if save_dir:
+        init_save_dir(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
@@ -106,7 +107,7 @@ def main(args):
 ap = argparse.ArgumentParser()
 ap.add_argument("--src", type=str, default='0', help="src of video")
 ap.add_argument("--show", action='store_true', default=False, help="show video on recording")
-ap.add_argument("--save", action='store_true', default=True, help="save video frame on recording")
+ap.add_argument("--save", action='store_true', default=False, help="save video frame on recording")
 ap.add_argument("--save_dir", type=str, default='./frames/src_0', help="directory to save frames")
 ap.add_argument("--show-q-size", action='store_true', default=False, help="show queue size in display window")
 args = vars(ap.parse_args())
