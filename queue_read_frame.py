@@ -1,8 +1,10 @@
+from shutil import rmtree
 from matplotlib.pyplot import show
 from imutils.vidstream import VideoStream
 from imutils.fps_counter import FPS_COUNTER
 import numpy as np
 import argparse
+from pathlib import Path
 
 # import imutils
 import time
@@ -16,8 +18,22 @@ import cv2
 # 	return frame
 
 
+RESET_DIR = True
+def init_save_dir(save_dir, reset=RESET_DIR):
+    save_dir = Path(save_dir)
+    if reset and save_dir.is_dir():
+        rmtree(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+def save_frame(save_dir, filename, frame):
+    if frame is not None and isinstance(frame, np.ndarray):
+        # name = "frame%d.jpg"%self.decoded_count
+        fpath = Path(save_dir)/filename
+        cv2.imwrite(str(fpath), frame)
+
 def main(args):
-    src = args['src']
+    src, save_dir = args['src'], args['save_dir']
+    init_save_dir(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
@@ -59,6 +75,11 @@ def main(args):
                     if args['show']:
                         cv2.imshow("Frame", frame)
 
+                    if args['save']:
+                        filename = "frame-%d.jpg" % founds
+                        save_frame(save_dir, filename, frame)
+                        # cv2.imwrite("Frame", frame)
+
                 # cv2.waitKey(1)
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
                     time.sleep(0.001)  # Ensures producer runs now, so 2 is sufficient
@@ -85,6 +106,8 @@ def main(args):
 ap = argparse.ArgumentParser()
 ap.add_argument("--src", type=str, default='0', help="src of video")
 ap.add_argument("--show", action='store_true', default=False, help="show video on recording")
+ap.add_argument("--save", action='store_true', default=True, help="save video frame on recording")
+ap.add_argument("--save_dir", type=str, default='./frames/src_0', help="directory to save frames")
 ap.add_argument("--show-q-size", action='store_true', default=False, help="show queue size in display window")
 args = vars(ap.parse_args())
 main(args)
