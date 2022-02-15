@@ -17,7 +17,13 @@ import cv2
 
 
 def main(args):
-    vid = VideoStream(args['src']).start()
+    src = args['src']
+    is_webcam = src.isnumeric() or src.lower().startswith(
+        ('rtsp://', 'rtmp://', 'http://'))
+
+    # idx of local cam src
+    src = int(src) if src.isnumeric() else src 
+    vid = VideoStream(src).start()
     # time.sleep(1.0)
 
     # start the FPS timer
@@ -39,8 +45,6 @@ def main(args):
                 # frame = filterFrame(frame)
 
                 # show the frame and update the FPS counter
-                if args['show']:
-                    cv2.imshow("Frame", frame)
 
                 if args['show_q_size']:
                     print('show q size')
@@ -49,8 +53,11 @@ def main(args):
                     #     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
                 if isinstance(frame, np.ndarray):
+                    
                     founds += 1
                     print(f"frame.shape:  {frame.shape}")
+                    if args['show']:
+                        cv2.imshow("Frame", frame)
 
                 # cv2.waitKey(1)
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
@@ -76,7 +83,7 @@ def main(args):
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--src", default=0, help="src of video")
+ap.add_argument("--src", type=str, default='0', help="src of video")
 ap.add_argument("--show", action='store_true', default=False, help="show video on recording")
 ap.add_argument("--show-q-size", action='store_true', default=False, help="show queue size in display window")
 args = vars(ap.parse_args())
