@@ -32,8 +32,10 @@ def save_frame(save_dir, filename, frame):
         cv2.imwrite(str(fpath), frame)
 
 def main(args):
-    src, save_dir = args['src'], args['save_dir']
+    src, save_dir, show = args['src'], args['save_dir'], args['show']
     init_save_dir(save_dir)
+    if show:
+        cv2.namedWindow("preview", cv2.WINDOW_NORMAL)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
@@ -72,15 +74,18 @@ def main(args):
                     
                     founds += 1
                     print(f"frame.shape:  {frame.shape}")
-                    if args['show']:
-                        cv2.imshow("Frame", frame)
+                    if show:
+                        cv2.imshow("preview", frame)
+                        if chr(cv2.waitKey(1) & 255) == "q":
+                            break
+                        # if cv2.waitKey(0) & 0xFF == ord('q'):
+                        #     break
 
                     if args['save']:
                         filename = "frame-%d.jpg" % founds
                         save_frame(save_dir, filename, frame)
                         # cv2.imwrite("Frame", frame)
-
-                # cv2.waitKey(1)
+   
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
                     time.sleep(0.001)  # Ensures producer runs now, so 2 is sufficient
                 fps_counter.update()
