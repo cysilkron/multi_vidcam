@@ -18,21 +18,22 @@ import cv2
 # 	return frame
 
 
-RESET = True
-SAVE_DIR = Path('./frames')
-if RESET and SAVE_DIR.is_dir():
-    rmtree(SAVE_DIR)
-SAVE_DIR.mkdir(parents=True, exist_ok=True)
+RESET_DIR = True
+def init_save_dir(save_dir, reset=RESET_DIR):
+    save_dir = Path(save_dir)
+    if reset and save_dir.is_dir():
+        rmtree(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
 
-def save_frame(filename, frame):
+def save_frame(save_dir, filename, frame):
     if frame is not None and isinstance(frame, np.ndarray):
         # name = "frame%d.jpg"%self.decoded_count
-        fpath = Path(SAVE_DIR)/filename
+        fpath = Path(save_dir)/filename
         cv2.imwrite(str(fpath), frame)
 
-
 def main(args):
-    src = args['src']
+    src, save_dir = args['src'], args['save_dir']
+    init_save_dir(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
@@ -76,7 +77,7 @@ def main(args):
 
                     if args['save']:
                         filename = "frame-%d.jpg" % founds
-                        save_frame(filename, frame)
+                        save_frame(save_dir, filename, frame)
                         # cv2.imwrite("Frame", frame)
 
                 # cv2.waitKey(1)
@@ -106,6 +107,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--src", type=str, default='0', help="src of video")
 ap.add_argument("--show", action='store_true', default=False, help="show video on recording")
 ap.add_argument("--save", action='store_true', default=True, help="save video frame on recording")
+ap.add_argument("--save_dir", type=str, default='./frames/src_0', help="directory to save frames")
 ap.add_argument("--show-q-size", action='store_true', default=False, help="show queue size in display window")
 args = vars(ap.parse_args())
 main(args)
