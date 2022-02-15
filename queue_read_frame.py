@@ -32,8 +32,8 @@ def save_frame(save_dir, filename, frame):
         cv2.imwrite(str(fpath), frame)
 
 def main(args):
-    src, save_dir = args['src'], args['save_dir']
-    if save_dir:
+    src, save_dir, save = args['src'], args['save_dir'], args['save']
+    if save:
         init_save_dir(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
