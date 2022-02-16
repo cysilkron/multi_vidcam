@@ -5,6 +5,7 @@ from imutils.fps_counter import FPS_COUNTER
 import numpy as np
 import argparse
 from pathlib import Path
+from write_frame_timestamp import get_date_timestamp
 
 # import imutils
 import time
@@ -84,7 +85,9 @@ def main(args):
                         filename = "frame-%d.jpg" % founds
                         save_frame(save_dir, filename, frame)
                         # cv2.imwrite("Frame", frame)
-   
+
+                    # write date timestamp
+                    get_date_timestamp(save_dir, count)
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
                     time.sleep(0.001)  # Ensures producer runs now, so 2 is sufficient
                 fps_counter.update()
