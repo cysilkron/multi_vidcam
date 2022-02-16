@@ -60,15 +60,7 @@ def main(args):
             # channels)
             count += 1
             try:
-                # q_item = vid.read()
-                # print(type(q_item))
-                # frame_idx, frame = q_item
                 frame_idx, frame = vid.read()
-                # frame = vid.read()
-
-                # Relocated filtering into producer thread with transform=filterFrame
-                # frame = filterFrame(frame)
-
                 # show the frame and update the FPS counter
 
                 if args['show_q_size']:
@@ -88,9 +80,10 @@ def main(args):
                         # if cv2.waitKey(0) & 0xFF == ord('q'):
                         #     break
 
-                    if args['save']:
+                    if save:
                         filename = "frame-%d.jpg" % frame_idx
                         save_frame(save_dir, filename, frame)
+                        time_recorder.save()
                         # cv2.imwrite("Frame", frame)
 
                     # write date timestamp
