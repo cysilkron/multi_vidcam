@@ -107,9 +107,8 @@ class VideoStream:
 
 
 class TimedVideoStream(VideoStream):
-    def __init__(self, time_recorder: FrameDatetime, src, transform=None, queue_size=128):
+    def __init__(self, src, time_recorder: FrameDatetime, transform=None, queue_size=128):
         super().__init__(src, transform, queue_size)
-        self.frame_idx = 0
         self.time_recorder = time_recorder
 
     def update(self):
@@ -139,7 +138,7 @@ class TimedVideoStream(VideoStream):
                     frame = self.transform(frame)
 
                 # add the frame to the queue
-                self.Q.put(frame)
+                self.Q.put([self.frame_idx, frame])
             else:
                 time.sleep(0.1)  # Rest for 10ms, we have a full queue
 

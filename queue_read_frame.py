@@ -43,8 +43,8 @@ def main(args):
 
     # idx of local cam src
     src = int(src) if src.isnumeric() else src
-    vid = TimedVideoStream(src, time_recorder).start() if save else VideoStream(src)
-    
+    vid = TimedVideoStream(src, time_recorder) if save else VideoStream(src)
+    vid = vid.start()
     # time.sleep(1.0)
 
     # start the FPS timer
@@ -60,10 +60,11 @@ def main(args):
             # channels)
             count += 1
             try:
-                q_item = vid.read()
-                print(type(q_item))
-                frame_idx, frame = q_item
-                # frame_idx, frame = vid.read()
+                # q_item = vid.read()
+                # print(type(q_item))
+                # frame_idx, frame = q_item
+                frame_idx, frame = vid.read()
+                # frame = vid.read()
 
                 # Relocated filtering into producer thread with transform=filterFrame
                 # frame = filterFrame(frame)
