@@ -27,7 +27,7 @@ class FrameDatetime:
         
     def save(self, batch_size=True):
         with open(self.save_path, 'a') as f:
-            f.writelines(self.frame_datetimes.pop())
+            f.writelines(self.frame_datetimes.pop(0))  # first in first out
 
     # def batch_save(self, batch_size=10):
     #     if batch_size<
