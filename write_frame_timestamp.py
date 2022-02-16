@@ -5,7 +5,8 @@ def get_date_timestamp(save_dir, count):
     
     if count == 1:
         with open(timestamp_csv, 'w') as f:
-            f.write('Frame, Date_Timestamp')
+            f.write('Frame, Date, Timestamp')
             
     with open(timestamp_csv, 'a') as f:
-        f.write(f'\n{count}, {datetime.now()}')
+        f.write(f'\n{count}, {datetime.now().date()}, {datetime.now().time()}')
+        
