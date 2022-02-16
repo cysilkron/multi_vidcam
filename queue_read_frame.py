@@ -1,6 +1,7 @@
 from shutil import rmtree
 from matplotlib.pyplot import show
-from imutils.vidstream import VideoStream
+from imutils.frame_datetime_recorder import FrameDatetime
+from imutils.vidstream import TimedVideoStream, VideoStream
 from imutils.fps_counter import FPS_COUNTER
 import numpy as np
 import argparse
@@ -36,12 +37,14 @@ def main(args):
     src, save_dir, save, show = args['src'], args['save_dir'], args['save'], args['show']
     if save:
         init_save_dir(save_dir)
+        time_recorder = FrameDatetime(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
     # idx of local cam src
-    src = int(src) if src.isnumeric() else src 
-    vid = VideoStream(src).start()
+    src = int(src) if src.isnumeric() else src
+    vid = TimedVideoStream(src, time_recorder).start() if save else VideoStream(src)
+    
     # time.sleep(1.0)
 
     # start the FPS timer
@@ -57,7 +60,10 @@ def main(args):
             # channels)
             count += 1
             try:
-                frame = vid.read()
+                q_item = vid.read()
+                print(type(q_item))
+                frame_idx, frame = q_item
+                # frame_idx, frame = vid.read()
 
                 # Relocated filtering into producer thread with transform=filterFrame
                 # frame = filterFrame(frame)
@@ -82,12 +88,12 @@ def main(args):
                         #     break
 
                     if args['save']:
-                        filename = "frame-%d.jpg" % founds
+                        filename = "frame-%d.jpg" % frame_idx
                         save_frame(save_dir, filename, frame)
                         # cv2.imwrite("Frame", frame)
 
                     # write date timestamp
-                    get_date_timestamp(save_dir, count)
+                    # get_date_timestamp(save_dir, count)
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
                     time.sleep(0.001)  # Ensures producer runs now, so 2 is sufficient
                 fps_counter.update()

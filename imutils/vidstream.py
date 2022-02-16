@@ -4,6 +4,8 @@ import sys
 import cv2
 import time
 
+from imutils.frame_datetime_recorder import FrameDatetime
+
 # import the Queue class from Python 3
 if sys.version_info >= (3, 0):
     from queue import Queue
@@ -14,12 +16,13 @@ else:
 
 
 class VideoStream:
-    def __init__(self, path, transform=None, queue_size=128):
+    def __init__(self, src, transform=None, queue_size=128):
         # initialize the file video stream along with the boolean
         # used to indicate if the thread should be stopped or not
-        self.stream = cv2.VideoCapture(path)
+        self.stream = cv2.VideoCapture(src)
         self.stopped = False
         self.transform = transform
+        self.frame_idx = 0
 
         # initialize the queue used to store frames read from
         # the video file
@@ -50,24 +53,25 @@ class VideoStream:
                 # reached the end of the video file
                 if not grabbed:
                     self.stopped = True
-                    
-                # if there are transforms to be done, might as well
-                # do them on producer thread before handing back to
-                # consumer thread. ie. Usually the producer is so far
-                # ahead of consumer that we have time to spare.
-                #
-                # Python is not parallel but the transform operations
-                # are usually OpenCV native so release the GIL.
-                #
-                # Really just trying to avoid spinning up additional
-                # native threads and overheads of additional
-                # producer/consumer queues since this one was generally
-                # idle grabbing frames.
-                if self.transform:
-                    frame = self.transform(frame)
+                else:
+                    # if there are transforms to be done, might as well
+                    # do them on producer thread before handing back to
+                    # consumer thread. ie. Usually the producer is so far
+                    # ahead of consumer that we have time to spare.
+                    #
+                    # Python is not parallel but the transform operations
+                    # are usually OpenCV native so release the GIL.
+                    #
+                    # Really just trying to avoid spinning up additional
+                    # native threads and overheads of additional
+                    # producer/consumer queues since this one was generally
+                    # idle grabbing frames.
+                    if self.transform:
+                        frame = self.transform(frame)
 
-                # add the frame to the queue
-                self.Q.put(frame)
+                    # add the frame to the queue
+                    self.frame_idx += 1
+                    self.Q.put([self.frame_idx, frame])
             else:
                 time.sleep(0.1)  # Rest for 10ms, we have a full queue
 
@@ -100,3 +104,44 @@ class VideoStream:
 
     def release(self):
         self.stream.release()
+
+
+class TimedVideoStream(VideoStream):
+    def __init__(self, time_recorder: FrameDatetime, src, transform=None, queue_size=128):
+        super().__init__(src, transform, queue_size)
+        self.frame_idx = 0
+        self.time_recorder = time_recorder
+
+    def update(self):
+        while True:
+            if self.stopped:
+                break
+
+            # ensure the queue has room in it
+            if not self.Q.full():
+                
+                # (grabbed, frame) = self.stream.read()
+                grabbed = self.stream.grab() # cam record (without decode)
+                if not grabbed:
+                    self.stopped = True
+
+                # time recording is done right after the frame is properly grab,
+                # to maximize precise time recording (avoiding the frame decoding time)
+                else:
+                    self.frame_idx += 1
+                    self.time_recorder.record(self.frame_idx)
+                    grabbed, frame = self.stream.retrieve() # decoding
+
+                # if the producer computing is far ahead of the consumer, 
+                # some transform is allowed to be done here
+                # but make sure the computation wont block the IO of camera and decoding computation
+                if self.transform:
+                    frame = self.transform(frame)
+
+                # add the frame to the queue
+                self.Q.put(frame)
+            else:
+                time.sleep(0.1)  # Rest for 10ms, we have a full queue
+
+        self.release()
+
