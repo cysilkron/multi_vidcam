@@ -101,6 +101,7 @@ class VideoStream:
         self.stopped = True
         # wait until stream resources are released (producer thread might be still grabbing frame)
         self.thread.join()
+        print(f"num of frame grabbed:  {self.frame_idx}")
 
     def release(self):
         self.stream.release()
