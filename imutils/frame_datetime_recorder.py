@@ -14,7 +14,8 @@ class FrameDatetime:
 
         # write header
         with open(self.save_path, 'w') as f:
-            f.write('Frame Number, Date, Timestamp')
+            header = ['Frame Number', 'Date', 'Timestamp']
+            f.write(','.join(header) + '\n')
 
     def now(self):
         # format datetime to appropriate format
@@ -25,12 +26,14 @@ class FrameDatetime:
 
     def record(self, frame_id):
         date, time = self.now()
-        line = f'\n{frame_id}, {date}, {time}'
-        self.frame_datetimes.append(line)
+        data = [frame_id, date, time]
+        self.frame_datetimes.append(data)
         
     def save(self, batch_size=True):
         with open(self.save_path, 'a') as f:
-            f.writelines(self.frame_datetimes.pop(0))  # first in first out
+            data = self.frame_datetimes.pop(0)  # first in first out
+            line = ','.join(list(map(str, data))) + '\n'
+            f.writelines(line)
 
     # def batch_save(self, batch_size=10):
     #     if batch_size<
