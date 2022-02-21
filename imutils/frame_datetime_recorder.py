@@ -8,14 +8,15 @@ class FrameDatetime:
         save_dir.mkdir(parents=True, exist_ok=True)
         self.save_path = Path(save_dir.parent.name)/f'timestamp{save_dir.name[-1]}.csv'
         self.frame_datetimes = []
+        self.csv_delimiter = ', '
 
         if self.save_path.is_file() and not exist_ok:
             raise FileExistsError
 
-        # write header
+        # write csv header
         with open(self.save_path, 'w') as f:
             header = ['Frame Number', 'Date', 'Timestamp']
-            f.write(','.join(header) + '\n')
+            f.write(self.csv_delimiter.join(header) + '\n')
 
     def now(self):
         # format datetime to appropriate format
@@ -32,7 +33,7 @@ class FrameDatetime:
     def save(self, batch_size=True):
         with open(self.save_path, 'a') as f:
             data = self.frame_datetimes.pop(0)  # first in first out
-            line = ','.join(list(map(str, data))) + '\n'
+            line = self.csv_delimiter.join(list(map(str, data))) + '\n'
             f.writelines(line)
 
     # def batch_save(self, batch_size=10):
