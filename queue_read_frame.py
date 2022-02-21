@@ -1,10 +1,12 @@
 from shutil import rmtree
 from matplotlib.pyplot import show
-from imutils.vidstream import VideoStream
+from imutils.frame_datetime_recorder import FrameDatetime
+from imutils.vidstream import TimedVideoStream, VideoStream
 from imutils.fps_counter import FPS_COUNTER
 import numpy as np
 import argparse
 from pathlib import Path
+from write_frame_timestamp import get_date_timestamp
 
 # import imutils
 import time
@@ -35,12 +37,14 @@ def main(args):
     src, save_dir, save, show = args['src'], args['save_dir'], args['save'], args['show']
     if save:
         init_save_dir(save_dir)
+        time_recorder = FrameDatetime(save_dir)
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
     # idx of local cam src
-    src = int(src) if src.isnumeric() else src 
-    vid = VideoStream(src).start()
+    src = int(src) if src.isnumeric() else src
+    vid = TimedVideoStream(src, time_recorder) if save else VideoStream(src)
+    vid = vid.start()
     # time.sleep(1.0)
 
     # start the FPS timer
@@ -48,19 +52,15 @@ def main(args):
 
     # loop over frames from the video file stream
     try:
-        count = 0
-        founds = 0
+        consumer_loop = 0
+        frame_founds = 0
         while vid.running():
             # grab the frame from the threaded video file stream, resize
             # it, and convert it to grayscale (while still retaining 3
             # channels)
-            count += 1
+            consumer_loop += 1
             try:
-                frame = vid.read()
-
-                # Relocated filtering into producer thread with transform=filterFrame
-                # frame = filterFrame(frame)
-
+                frame_idx, frame = vid.read()
                 # show the frame and update the FPS counter
 
                 if args['show_q_size']:
@@ -71,7 +71,7 @@ def main(args):
 
                 if isinstance(frame, np.ndarray):
                     
-                    founds += 1
+                    frame_founds += 1
                     print(f"frame.shape:  {frame.shape}")
                     if show:
                         cv2.imshow("preview", frame)
@@ -80,11 +80,14 @@ def main(args):
                         # if cv2.waitKey(0) & 0xFF == ord('q'):
                         #     break
 
-                    if args['save']:
-                        filename = "frame-%d.jpg" % founds
+                    if save:
+                        filename = "frame-%d.jpg" % frame_idx
                         save_frame(save_dir, filename, frame)
+                        time_recorder.save()
                         # cv2.imwrite("Frame", frame)
-   
+
+                    # write date timestamp
+                    # get_date_timestamp(save_dir, consumer_loop)
                 if vid.Q.qsize() < 2:  # If we are low on frames, give time to producer
                     time.sleep(0.001)  # Ensures producer runs now, so 2 is sufficient
                 fps_counter.update()
@@ -100,8 +103,8 @@ def main(args):
         print("fps stopped")
         print("[INFO] elasped time: {:.2f} s".format(fps_counter.elapsed()))
         print("[INFO] approx. FPS: {:.2f}".format(fps_counter.fps()))
-        print(f"count:  {count}")
-        print(f"founds:  {founds}")
+        print(f"consumer_loop counts:  {consumer_loop}")
+        print(f"frame founds in consumer loop:  {frame_founds}")
         cv2.destroyAllWindows()
         vid.stop()
         vid.release()
