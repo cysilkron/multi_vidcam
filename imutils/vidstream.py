@@ -111,6 +111,23 @@ class TimedVideoStream(VideoStream):
     def __init__(self, src, time_recorder: FrameDatetime, transform=None, queue_size=128):
         super().__init__(src, transform, queue_size)
         self.time_recorder = time_recorder
+        self.max_retry = 3
+
+    def is_camera_started(self):
+        '''this function shall be call before the `update` thread is started'''
+        # retry checking the camera is started every 0.01 seconds
+        retry_count = 0
+        grabbed = False
+        while retry_count < self.max_retry:
+            grabbed = self.stream.grab()  # cam record (without decode)
+            if grabbed:
+                break
+            else:
+                retry_count += 1
+                time.sleep(0.01)
+
+        return grabbed
+
 
     def update(self):
         while True:
