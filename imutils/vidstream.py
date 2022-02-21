@@ -3,7 +3,7 @@ from threading import Thread
 import sys
 import cv2
 import time
-
+from imutils.fps_counter import FPS_COUNTER
 from imutils.frame_datetime_recorder import FrameDatetime
 
 # import the Queue class from Python 3
@@ -108,10 +108,23 @@ class VideoStream:
 
 
 class TimedVideoStream(VideoStream):
-    def __init__(self, src, time_recorder: FrameDatetime, transform=None, queue_size=128):
+    def __init__(self, src, time_recorder: FrameDatetime, fps_counter: FPS_COUNTER, transform=None, queue_size=128):
         super().__init__(src, transform, queue_size)
         self.time_recorder = time_recorder
         self.max_retry = 3
+        self.fps_counter = fps_counter
+        self.camera_started = False
+
+    def start(self):
+        # start a thread to read frames from the file video stream
+        if not self.is_camera_started():
+            raise RuntimeError("Camera cant be started")
+
+        self.fps_counter.start()
+        self.camera_started = True
+         
+        self.thread.start()
+        return self
 
     def is_camera_started(self):
         '''this function shall be call before the `update` thread is started'''
@@ -162,3 +175,10 @@ class TimedVideoStream(VideoStream):
 
         self.release()
 
+    def stop(self):
+        # indicate that the thread should be stopped
+        self.stopped = True
+        # wait until stream resources are released (producer thread might be still grabbing frame)
+        self.thread.join()
+        self.fps_counter.stop()
+        print(f"num of frame grabbed:  {self.frame_idx}")

@@ -34,6 +34,7 @@ def save_frame(save_dir, filename, frame):
         cv2.imwrite(str(fpath), frame)
 
 def main(args):
+    fps_counter = FPS_COUNTER().program_start()
     src, save_dir, save, show = args['src'], args['save_dir'], args['save'], args['show']
     if save:
         init_save_dir(save_dir)
@@ -41,14 +42,14 @@ def main(args):
     is_webcam = src.isnumeric() or src.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
+    
+
     # idx of local cam src
     src = int(src) if src.isnumeric() else src
-    vid = TimedVideoStream(src, time_recorder) if save else VideoStream(src)
+    vid = TimedVideoStream(src, time_recorder, fps_counter) if save else VideoStream(src)
     vid = vid.start()
     # time.sleep(1.0)
 
-    # start the FPS timer
-    fps_counter = FPS_COUNTER().start()
 
     # loop over frames from the video file stream
     try:
@@ -99,21 +100,21 @@ def main(args):
         raise Exception
     finally:
         # do a bit of cleanup
-        fps_counter.stop()
-        print("fps stopped")
-        print("[INFO] elasped time: {:.2f} s".format(fps_counter.elapsed()))
-        print("[INFO] approx. FPS: {:.2f}".format(fps_counter.fps()))
-        print(f"consumer_loop counts:  {consumer_loop}")
+        # fps_counter.stop()
+        print(f"\nconsumer_loop counts:  {consumer_loop}")
         print(f"frame founds in consumer loop:  {frame_founds}")
         cv2.destroyAllWindows()
         vid.stop()
         vid.release()
 
+        fps_counter.info()
+
+
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--src", type=str, default='0', help="src of video")
 ap.add_argument("--show", action='store_true', default=False, help="show video on recording")
-ap.add_argument("--save", action='store_true', default=False, help="save video frame on recording")
+ap.add_argument("--save", action='store_true', default=True, help="save video frame on recording")
 ap.add_argument("--save_dir", type=str, default='./frames/src_0', help="directory to save frames")
 ap.add_argument("--show-q-size", action='store_true', default=False, help="show queue size in display window")
 args = vars(ap.parse_args())
